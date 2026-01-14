@@ -40,8 +40,16 @@ public class Booking {
     private BookingStatus status;
     private LocalDateTime createdAt;
 
+    @Column(name = "checkout_request_id")
+    private String checkoutRequestId;
+
+    @Column(name = "mpesa_receipt_number")
+    private String mpesaReceiptNumber;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
+
+
 }
