@@ -5,7 +5,6 @@ import com.example.makaosafe.security.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -38,27 +37,12 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        /* 1. PUBLIC AUTH ENDPOINTS */
                         .requestMatchers("/api/auth/**").permitAll()
-
-                        /* 2. PUBLIC PROPERTY ENDPOINTS (TENANT VIEW) */
-                        // This allows GET /api/properties, GET /api/properties/1, GET /api/properties/search, etc.
-                        .requestMatchers(HttpMethod.GET, "/api/properties/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/properties").permitAll()
-
-                        /* 3. PUBLIC CALLBACKS */
+                        .requestMatchers("/api/properties/all", "/api/properties/search", "/api/properties/{id}").permitAll()
                         .requestMatchers("/api/payment/callback").permitAll()
-
-                        /* 4. LANDLORD PROTECTED ENDPOINTS */
-                        // Explicitly check for both prefixed and non-prefixed roles
-                        .requestMatchers(HttpMethod.POST, "/api/properties/**").hasAnyAuthority("ROLE_LANDLORD", "LANDLORD")
-                        .requestMatchers("/api/properties/my-listings").hasAnyAuthority("ROLE_LANDLORD", "LANDLORD")
-
-                        /* 5. AUTHENTICATED USER ENDPOINTS */
+                        .requestMatchers("/api/properties/add", "/api/properties/my-listings").hasRole("LANDLORD")
                         .requestMatchers("/api/bookings/**").authenticated()
                         .requestMatchers("/api/payment/**").authenticated()
-
-                        /* 6. CATCH-ALL */
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
@@ -81,30 +65,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        // List all possible origins
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:4200",
-                "https://makao-safe.vercel.app",
-                "https://makaosafe-backend.onrender.com"
-        ));
-
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "https://makao-safe.vercel.app"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-        // Added 'Origin' and 'X-Requested-With' which are common causes for 403 in browser
-        configuration.setAllowedHeaders(Arrays.asList(
-                "Authorization",
-                "Content-Type",
-                "X-Requested-With",
-                "Accept",
-                "Origin",
-                "Access-Control-Request-Method",
-                "Access-Control-Request-Headers"
-        ));
-
-        configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept"));
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
         configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
