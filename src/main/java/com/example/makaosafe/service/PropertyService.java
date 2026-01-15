@@ -31,6 +31,7 @@ public class PropertyService {
 
         Property property = Property.builder()
                 .title(request.getTitle())
+                .description(request.getDescription())
                 .price(request.getPrice())
                 .locationName(request.getLocationName())
                 .latitude(request.getLatitude())
@@ -39,12 +40,12 @@ public class PropertyService {
                 .videoUrl(request.getVideoUrl())
                 .listingType(request.getListingType())
                 .propertyType(request.getPropertyType())
+                .amenities(request.getAmenities())
                 .landlord(landlord)
                 .isVerified(false)
                 .build();
 
         Property savedProperty = propertyRepository.save(property);
-
         return mapToResponse(savedProperty);
     }
 
@@ -86,6 +87,7 @@ public class PropertyService {
         return PropertyResponse.builder()
                 .id(property.getId())
                 .title(property.getTitle())
+                .description(property.getDescription())
                 .price(property.getPrice())
                 .locationName(property.getLocationName())
                 .latitude(property.getLatitude())
@@ -94,6 +96,7 @@ public class PropertyService {
                 .videoUrl(property.getVideoUrl())
                 .listingType(property.getListingType())
                 .propertyType(property.getPropertyType())
+                .amenities(property.getAmenities())
                 .isVerified(property.isVerified())
                 .landlordId(property.getLandlord().getId())
                 .landlordName(property.getLandlord().getFullName())

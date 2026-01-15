@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Builder
@@ -15,12 +16,13 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class PropertyRequest {
     private String title;
+    private String description;
     private BigDecimal price;
     private String locationName;
     private double latitude;
     private double longitude;
-    private String imageUrl;
     private String videoUrl;
     private ListingType listingType;
     private PropertyType propertyType;
+    private List<String> amenities;
 }

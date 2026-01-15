@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Builder
@@ -24,6 +25,9 @@ public class Property {
 
     @Column(nullable = false)
     private String title;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
     @Column(nullable = false)
     private BigDecimal price;
@@ -42,6 +46,11 @@ public class Property {
 
     @Enumerated(EnumType.STRING)
     private PropertyType propertyType;
+
+    @ElementCollection
+    @CollectionTable(name = "property_amenities", joinColumns = @JoinColumn(name = "property_id"))
+    @Column(name = "amenity")
+    private List<String> amenities;
 
     @Builder.Default
     private boolean isVerified = false;

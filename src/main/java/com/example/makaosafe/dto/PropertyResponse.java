@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Builder
@@ -16,6 +17,7 @@ import java.math.BigDecimal;
 public class PropertyResponse {
     private Long id;
     private String title;
+    private String description;
     private BigDecimal price;
     private String locationName;
     private double latitude;
@@ -24,8 +26,8 @@ public class PropertyResponse {
     private String videoUrl;
     private ListingType listingType;
     private PropertyType propertyType;
+    private List<String> amenities;
     private boolean isVerified;
-
     private Long landlordId;
     private String landlordName;
     private String landlordPhone;
