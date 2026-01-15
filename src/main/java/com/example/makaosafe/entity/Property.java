@@ -49,8 +49,8 @@ public class Property {
     private PropertyType propertyType;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "prop_amenities", joinColumns = @JoinColumn(name = "property_id")) // Changed name slightly
-    @Column(name = "amenity_name")
+    @CollectionTable(name = "property_amenities", joinColumns = @JoinColumn(name = "property_id"))
+    @Column(name = "amenity")
     private List<String> amenities = new ArrayList<>();
 
     @Builder.Default
