@@ -1,14 +1,16 @@
 package com.example.makaosafe.repository;
 
 import com.example.makaosafe.entity.Property;
+import com.example.makaosafe.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
 import java.util.List;
 
 public interface PropertyRepository extends JpaRepository<Property, Long> {
-    List<Property> findByLandlordId(Long landlordId);
+
+    List<Property> findByLandlord(User landlord);
+
     @Query("SELECT p FROM Property p WHERE " +
             "(LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(p.locationName) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +

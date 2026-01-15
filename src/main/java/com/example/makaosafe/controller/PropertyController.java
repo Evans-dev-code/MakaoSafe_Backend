@@ -30,6 +30,11 @@ public class PropertyController {
         return ResponseEntity.ok(propertyService.addProperty(request, imageFile));
     }
 
+    @GetMapping("/my-listings")
+    public ResponseEntity<List<PropertyResponse>> getMyListings() {
+        return ResponseEntity.ok(propertyService.getMyProperties());
+    }
+
     @GetMapping
     public ResponseEntity<List<PropertyResponse>> getAllProperties() {
         return ResponseEntity.ok(propertyService.getAllProperties());

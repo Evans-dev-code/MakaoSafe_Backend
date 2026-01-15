@@ -48,6 +48,16 @@ public class PropertyService {
         return mapToResponse(savedProperty);
     }
 
+    public List<PropertyResponse> getMyProperties() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User landlord = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        return propertyRepository.findByLandlord(landlord).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     public List<PropertyResponse> getAllProperties() {
         return propertyRepository.findAll().stream()
                 .map(this::mapToResponse)

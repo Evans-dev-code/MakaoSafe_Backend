@@ -38,7 +38,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/properties/all", "/api/properties/search").permitAll()
+                        .requestMatchers("/api/properties/all", "/api/properties/search", "/api/properties/{id}").permitAll()
+                        .requestMatchers("/api/payment/callback").permitAll()
                         .requestMatchers("/api/properties/add", "/api/properties/my-listings").hasRole("LANDLORD")
                         .requestMatchers("/api/bookings/**").authenticated()
                         .requestMatchers("/api/payment/**").authenticated()
