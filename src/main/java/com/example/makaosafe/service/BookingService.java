@@ -61,10 +61,20 @@ public class BookingService {
 
     public List<BookingResponse> getMyBookings() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User tenant = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return bookingRepository.findByTenantId(tenant.getId()).stream()
+        return bookingRepository.findByTenantId(user.getId()).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<BookingResponse> getBookingsForLandlord() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User landlord = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return bookingRepository.findByPropertyLandlordId(landlord.getId()).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }

@@ -25,4 +25,9 @@ public class BookingController {
     public ResponseEntity<List<BookingResponse>> getMyBookings() {
         return ResponseEntity.ok(bookingService.getMyBookings());
     }
+
+    @GetMapping("/landlord")
+    public ResponseEntity<List<BookingResponse>> getLandlordBookings() {
+        return ResponseEntity.ok(bookingService.getBookingsForLandlord());
+    }
 }
