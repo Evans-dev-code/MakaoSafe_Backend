@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -47,10 +48,11 @@ public class Property {
     @Enumerated(EnumType.STRING)
     private PropertyType propertyType;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "property_amenities", joinColumns = @JoinColumn(name = "property_id"))
     @Column(name = "amenity")
-    private List<String> amenities;
+    @Builder.Default
+    private List<String> amenities = new ArrayList<>();
 
     @Builder.Default
     private boolean isVerified = false;
