@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,10 +22,12 @@ public class PropertyService {
     private final PropertyRepository propertyRepository;
     private final UserRepository userRepository;
 
-    public PropertyResponse addProperty(PropertyRequest request) {
+    public PropertyResponse addProperty(PropertyRequest request, MultipartFile imageFile) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User landlord = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        String imageUrl = "https://placehold.co/600x400?text=" + request.getTitle().replaceAll(" ", "+");
 
         Property property = Property.builder()
                 .title(request.getTitle())
@@ -32,7 +35,7 @@ public class PropertyService {
                 .locationName(request.getLocationName())
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
-                .imageUrl(request.getImageUrl())
+                .imageUrl(imageUrl)
                 .videoUrl(request.getVideoUrl())
                 .listingType(request.getListingType())
                 .propertyType(request.getPropertyType())
