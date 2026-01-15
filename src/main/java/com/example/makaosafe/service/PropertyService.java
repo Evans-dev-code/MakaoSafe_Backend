@@ -54,6 +54,12 @@ public class PropertyService {
                 .collect(Collectors.toList());
     }
 
+    public PropertyResponse getPropertyById(Long id) {
+        Property property = propertyRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Property not found with id: " + id));
+        return mapToResponse(property);
+    }
+
     public List<PropertyResponse> searchProperties(String keyword) {
         return propertyRepository.searchProperties(keyword).stream()
                 .map(this::mapToResponse)

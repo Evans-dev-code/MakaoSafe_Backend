@@ -35,6 +35,11 @@ public class PropertyController {
         return ResponseEntity.ok(propertyService.getAllProperties());
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<PropertyResponse> getPropertyById(@PathVariable Long id) {
+        return ResponseEntity.ok(propertyService.getPropertyById(id));
+    }
+
     @GetMapping("/search")
     public ResponseEntity<List<PropertyResponse>> searchProperties(@RequestParam("keyword") String keyword) {
         return ResponseEntity.ok(propertyService.searchProperties(keyword));
