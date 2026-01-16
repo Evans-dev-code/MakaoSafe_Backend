@@ -27,7 +27,6 @@ public class MpesaService {
     private final MpesaConfig mpesaConfig;
     private final RestTemplate restTemplate;
 
-    // 1. Get Access Token from Safaricom
     public String getAccessToken() {
         String keys = mpesaConfig.getConsumerKey() + ":" + mpesaConfig.getConsumerSecret();
         String encodedKeys = Base64.getEncoder().encodeToString(keys.getBytes(StandardCharsets.UTF_8));
@@ -46,22 +45,19 @@ public class MpesaService {
         return response.getBody().getAccessToken();
     }
 
-    // 2. Initiate STK Push
     public StkPushResponse initiateStkPush(String phoneNumber, double amount, String accountReference) {
         String token = getAccessToken();
         String timestamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
 
-        // Password = Base64(Shortcode + Passkey + Timestamp)
         String passwordStr = mpesaConfig.getBusinessShortcode() + mpesaConfig.getPasskey() + timestamp;
         String password = Base64.getEncoder().encodeToString(passwordStr.getBytes());
 
-        // Construct the JSON Payload
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("BusinessShortCode", mpesaConfig.getBusinessShortcode());
         requestBody.put("Password", password);
         requestBody.put("Timestamp", timestamp);
-        requestBody.put("TransactionType", "CustomerPayBillOnline"); // Use "CustomerBuyGoodsOnline" if using Till
-        requestBody.put("Amount", (int) amount); // Sandbox only accepts whole numbers usually
+        requestBody.put("TransactionType", "CustomerPayBillOnline");
+        requestBody.put("Amount", (int) Math.round(amount));
         requestBody.put("PartyA", phoneNumber);
         requestBody.put("PartyB", mpesaConfig.getBusinessShortcode());
         requestBody.put("PhoneNumber", phoneNumber);
@@ -83,8 +79,8 @@ public class MpesaService {
             );
             return response.getBody();
         } catch (Exception e) {
-            log.error("Error sending STK Push: ", e);
-            throw new RuntimeException("Failed to initiate M-Pesa payment");
+            log.error("STK Push Failed", e);
+            throw new RuntimeException("M-Pesa initiation failed");
         }
     }
 }
