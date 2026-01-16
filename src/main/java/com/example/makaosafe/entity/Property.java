@@ -7,6 +7,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -30,7 +33,7 @@ public class Property {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 38, scale = 2)
     private BigDecimal price;
 
     @Column(nullable = false)
@@ -49,7 +52,15 @@ public class Property {
     private PropertyType propertyType;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "property_amenities", joinColumns = @JoinColumn(name = "property_id"))
+    @CollectionTable(
+            name = "property_amenities",
+            joinColumns = @JoinColumn(name = "property_id")
+    )
+    @CollectionId(
+            column = @Column(name = "id"),
+            generator = "increment"
+    )
+    @JdbcTypeCode(SqlTypes.BIGINT)
     @Column(name = "amenity")
     private List<String> amenities = new ArrayList<>();
 
