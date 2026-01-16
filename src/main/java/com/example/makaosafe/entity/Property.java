@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -56,12 +55,8 @@ public class Property {
             name = "property_amenities",
             joinColumns = @JoinColumn(name = "property_id")
     )
-    @CollectionId(
-            column = @Column(name = "id"),
-            generator = "increment"
-    )
-    @JdbcTypeCode(SqlTypes.BIGINT)
     @Column(name = "amenity")
+    @Builder.Default
     private List<String> amenities = new ArrayList<>();
 
     @Builder.Default
