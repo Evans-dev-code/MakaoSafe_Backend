@@ -21,7 +21,7 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.createBooking(request));
     }
 
-    @GetMapping
+    @GetMapping("/my-bookings")
     public ResponseEntity<List<BookingResponse>> getMyBookings() {
         return ResponseEntity.ok(bookingService.getMyBookings());
     }

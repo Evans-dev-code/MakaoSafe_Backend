@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -27,25 +26,23 @@ public class MpesaService {
     private final RestTemplate restTemplate;
 
     public String getAccessToken() {
-        // 1. Build Credentials String
         String auth = mpesaConfig.getConsumerKey() + ":" + mpesaConfig.getConsumerSecret();
-        String authHeader = "Basic " + Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
+        String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.ISO_8859_1));
 
-        // 2. Set Headers
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", authHeader);
+        headers.set("Authorization", "Basic " + encodedAuth);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         try {
-            // 3. Use UriComponentsBuilder to prevent encoding issues with query params
-            String url = UriComponentsBuilder.fromHttpUrl(mpesaConfig.getAuthUrl())
-                    .queryParam("grant_type", "client_credentials")
-                    .build()
-                    .toUriString();
+            // We use a simple string URL to avoid double-appending the query param
+            String url = mpesaConfig.getAuthUrl().trim();
+            if (!url.contains("?")) {
+                url += "?grant_type=client_credentials";
+            }
 
-            log.info("Requesting M-Pesa token from: {}", url);
+            log.info("Requesting token from: {}", url);
 
             ResponseEntity<AccessTokenResponse> response = restTemplate.exchange(
                     url,
@@ -54,12 +51,12 @@ public class MpesaService {
                     AccessTokenResponse.class
             );
 
-            if (response.getBody() != null) {
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 return response.getBody().getAccessToken();
             }
-            throw new RuntimeException("Safaricom returned an empty body");
+            throw new RuntimeException("Unexpected response status: " + response.getStatusCode());
         } catch (Exception e) {
-            log.error("M-Pesa Auth failed. Error: {}", e.getMessage());
+            log.error("M-Pesa Auth Error: {}", e.getMessage());
             throw new RuntimeException("M-Pesa Auth failed: " + e.getMessage());
         }
     }
@@ -98,7 +95,7 @@ public class MpesaService {
             );
             return response.getBody();
         } catch (Exception e) {
-            log.error("STK Push failed: {}", e.getMessage());
+            log.error("STK Push Failed: {}", e.getMessage());
             throw new RuntimeException("M-Pesa payment initiation failed");
         }
     }

@@ -38,7 +38,7 @@ public class BookingService {
 
         BigDecimal totalPrice;
 
-        if (property.getListingType() == ListingType.BNB) {
+        if (property.getListingType() == ListingType.BNB && request.getStartDate() != null && request.getEndDate() != null) {
             long days = ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate());
             if (days < 1) days = 1;
             totalPrice = property.getPrice().multiply(BigDecimal.valueOf(days));
