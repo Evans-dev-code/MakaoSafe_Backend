@@ -23,10 +23,9 @@ public class PropertyController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<PropertyResponse> addProperty(
-            @RequestPart("data") String propertyRequestJson,
+            @RequestPart("data") PropertyRequest request,
             @RequestPart("image") MultipartFile imageFile
     ) throws IOException {
-        PropertyRequest request = objectMapper.readValue(propertyRequestJson, PropertyRequest.class);
         return ResponseEntity.ok(propertyService.addProperty(request, imageFile));
     }
 
