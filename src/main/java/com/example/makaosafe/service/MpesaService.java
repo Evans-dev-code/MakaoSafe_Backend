@@ -8,10 +8,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Base64;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Collections;
 
 @Service
 @RequiredArgsConstructor
@@ -22,11 +27,11 @@ public class MpesaService {
     private final RestTemplate restTemplate;
 
     public String getAccessToken() {
-        // Construct the Base64 string: ConsumerKey:ConsumerSecret
+        // 1. Build Credentials String
         String auth = mpesaConfig.getConsumerKey() + ":" + mpesaConfig.getConsumerSecret();
-        byte[] encodedAuth = Base64.getEncoder().encode(auth.getBytes(StandardCharsets.US_ASCII));
-        String authHeader = "Basic " + new String(encodedAuth);
+        String authHeader = "Basic " + Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
 
+        // 2. Set Headers
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", authHeader);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
@@ -34,8 +39,13 @@ public class MpesaService {
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         try {
-            // Safaricom Sandbox requires the ?grant_type=client_credentials query param
-            String url = mpesaConfig.getAuthUrl() + "?grant_type=client_credentials";
+            // 3. Use UriComponentsBuilder to prevent encoding issues with query params
+            String url = UriComponentsBuilder.fromHttpUrl(mpesaConfig.getAuthUrl())
+                    .queryParam("grant_type", "client_credentials")
+                    .build()
+                    .toUriString();
+
+            log.info("Requesting M-Pesa token from: {}", url);
 
             ResponseEntity<AccessTokenResponse> response = restTemplate.exchange(
                     url,
@@ -47,9 +57,9 @@ public class MpesaService {
             if (response.getBody() != null) {
                 return response.getBody().getAccessToken();
             }
-            throw new RuntimeException("Empty response from Safaricom");
+            throw new RuntimeException("Safaricom returned an empty body");
         } catch (Exception e) {
-            log.error("Failed to get M-Pesa Access Token. Check your Consumer Key/Secret: {}", e.getMessage());
+            log.error("M-Pesa Auth failed. Error: {}", e.getMessage());
             throw new RuntimeException("M-Pesa Auth failed: " + e.getMessage());
         }
     }
@@ -88,8 +98,8 @@ public class MpesaService {
             );
             return response.getBody();
         } catch (Exception e) {
-            log.error("STK Push Failed. Detailed Error: ", e);
-            throw new RuntimeException("M-Pesa STK Push Initiation failed");
+            log.error("STK Push failed: {}", e.getMessage());
+            throw new RuntimeException("M-Pesa payment initiation failed");
         }
     }
 }
