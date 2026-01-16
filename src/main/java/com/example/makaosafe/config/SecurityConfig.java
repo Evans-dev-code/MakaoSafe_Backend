@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -39,16 +38,22 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // 1. Allow all OPTIONS requests (CORS pre-flight)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/payment/callback").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/properties/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/properties").permitAll()
 
-                        .requestMatchers("/api/payment/pay/**").authenticated()
+                        // 2. Public endpoints
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/payment/callback/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/properties/**").permitAll()
+
+                        // 3. Payment Initiation - MUST BE ABOVE general .authenticated()
+                        .requestMatchers("/api/payment/pay/**").hasAnyAuthority("ROLE_TENANT", "TENANT", "ROLE_LANDLORD", "LANDLORD")
+
+                        // 4. General Authenticated
                         .requestMatchers("/api/bookings/**").authenticated()
                         .requestMatchers("/api/payment/**").authenticated()
 
+                        // 5. Landlord only
                         .requestMatchers(HttpMethod.POST, "/api/properties/**").hasAnyAuthority("ROLE_LANDLORD", "LANDLORD")
                         .requestMatchers("/api/properties/my-listings").hasAnyAuthority("ROLE_LANDLORD", "LANDLORD")
 
@@ -77,7 +82,7 @@ public class SecurityConfig {
                 "https://makaosafe-backend.onrender.com"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "X-Requested-With", "Origin"));
         configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);

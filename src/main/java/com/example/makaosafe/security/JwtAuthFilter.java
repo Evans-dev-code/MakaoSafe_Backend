@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +19,7 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
@@ -34,7 +36,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         final String jwt;
         final String userEmail;
 
-        // 1. If no token, continue as anonymous
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -42,7 +43,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         try {
             jwt = authHeader.substring(7);
-            userEmail = jwtUtils.extractUsername(jwt); // <--- This was crashing before!
+            userEmail = jwtUtils.extractUsername(jwt);
 
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
@@ -53,12 +54,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             null,
                             userDetails.getAuthorities()
                     );
+
+                    log.info("User {} authenticated with authorities: {}", userEmail, userDetails.getAuthorities());
+
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
         } catch (Exception e) {
-            System.out.println("JWT Verification Failed: " + e.getMessage());
+            log.error("JWT Verification Failed: {}", e.getMessage());
         }
 
         filterChain.doFilter(request, response);
