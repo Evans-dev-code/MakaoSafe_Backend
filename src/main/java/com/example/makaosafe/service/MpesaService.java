@@ -5,19 +5,13 @@ import com.example.makaosafe.dto.AccessTokenResponse;
 import com.example.makaosafe.dto.StkPushResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.Base64;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -28,21 +22,36 @@ public class MpesaService {
     private final RestTemplate restTemplate;
 
     public String getAccessToken() {
-        String keys = mpesaConfig.getConsumerKey() + ":" + mpesaConfig.getConsumerSecret();
-        String encodedKeys = Base64.getEncoder().encodeToString(keys.getBytes(StandardCharsets.UTF_8));
+        // Construct the Base64 string: ConsumerKey:ConsumerSecret
+        String auth = mpesaConfig.getConsumerKey() + ":" + mpesaConfig.getConsumerSecret();
+        byte[] encodedAuth = Base64.getEncoder().encode(auth.getBytes(StandardCharsets.US_ASCII));
+        String authHeader = "Basic " + new String(encodedAuth);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Basic " + encodedKeys);
+        headers.set("Authorization", authHeader);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
-        ResponseEntity<AccessTokenResponse> response = restTemplate.exchange(
-                mpesaConfig.getAuthUrl(),
-                HttpMethod.GET,
-                entity,
-                AccessTokenResponse.class
-        );
+        try {
+            // Safaricom Sandbox requires the ?grant_type=client_credentials query param
+            String url = mpesaConfig.getAuthUrl() + "?grant_type=client_credentials";
 
-        return response.getBody().getAccessToken();
+            ResponseEntity<AccessTokenResponse> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    AccessTokenResponse.class
+            );
+
+            if (response.getBody() != null) {
+                return response.getBody().getAccessToken();
+            }
+            throw new RuntimeException("Empty response from Safaricom");
+        } catch (Exception e) {
+            log.error("Failed to get M-Pesa Access Token. Check your Consumer Key/Secret: {}", e.getMessage());
+            throw new RuntimeException("M-Pesa Auth failed: " + e.getMessage());
+        }
     }
 
     public StkPushResponse initiateStkPush(String phoneNumber, double amount, String accountReference) {
@@ -79,8 +88,8 @@ public class MpesaService {
             );
             return response.getBody();
         } catch (Exception e) {
-            log.error("STK Push Failed", e);
-            throw new RuntimeException("M-Pesa initiation failed");
+            log.error("STK Push Failed. Detailed Error: ", e);
+            throw new RuntimeException("M-Pesa STK Push Initiation failed");
         }
     }
 }
