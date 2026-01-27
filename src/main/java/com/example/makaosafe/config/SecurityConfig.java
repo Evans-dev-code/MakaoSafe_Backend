@@ -84,6 +84,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:4200",
+                "https://makao-safe-frontend.vercel.app",
                 "https://makao-safe.vercel.app",
                 "https://makaosafe-backend.onrender.com"
         ));
