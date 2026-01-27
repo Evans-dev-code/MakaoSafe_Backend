@@ -38,24 +38,30 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 1. Allow all OPTIONS requests (CORS pre-flight)
+                        // 1. CORS Pre-flight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // 2. Public endpoints
+                        // 2. Public Auth & Callbacks
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/payment/callback/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/properties/**").permitAll()
 
-                        // 3. Payment Initiation - MUST BE ABOVE general .authenticated()
+                        // 3. Public Property Viewing
+                        .requestMatchers(HttpMethod.GET, "/api/properties").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/properties/search/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/properties/{id:[0-9]+}").permitAll()
+
+                        // 4. Secure Contact (WhatsApp) - Requires Authentication
+                        .requestMatchers(HttpMethod.GET, "/api/properties/*/contact").authenticated()
+
+                        // 5. Payments & Bookings - Restricted to valid roles
                         .requestMatchers("/api/payment/pay/**").hasAnyAuthority("ROLE_TENANT", "TENANT", "ROLE_LANDLORD", "LANDLORD")
-
-                        // 4. General Authenticated
+                        .requestMatchers("/api/bookings/my-bookings").authenticated()
                         .requestMatchers("/api/bookings/**").authenticated()
                         .requestMatchers("/api/payment/**").authenticated()
 
-                        // 5. Landlord only
-                        .requestMatchers(HttpMethod.POST, "/api/properties/**").hasAnyAuthority("ROLE_LANDLORD", "LANDLORD")
+                        // 6. Landlord Listings Management
                         .requestMatchers("/api/properties/my-listings").hasAnyAuthority("ROLE_LANDLORD", "LANDLORD")
+                        .requestMatchers(HttpMethod.POST, "/api/properties/**").hasAnyAuthority("ROLE_LANDLORD", "LANDLORD")
 
                         .anyRequest().authenticated()
                 )

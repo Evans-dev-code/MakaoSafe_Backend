@@ -12,7 +12,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,6 +50,27 @@ public class PropertyService {
 
         Property savedProperty = propertyRepository.save(property);
         return mapToResponse(savedProperty);
+    }
+
+    // NEW FEATURE: Generate Secure WhatsApp Link
+    public Map<String, String> getChatLink(Long propertyId) {
+        Property property = propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new RuntimeException("Property not found"));
+
+        String phone = property.getLandlord().getPhoneNumber();
+        // Standardize phone format (Ensure it starts with 254 if it starts with 0)
+        if (phone.startsWith("0")) {
+            phone = "254" + phone.substring(1);
+        }
+
+        String message = "Hi " + property.getLandlord().getFullName() +
+                ", I'm interested in your property: " + property.getTitle() +
+                " listed on MakaoSafe.";
+
+        String encodedMessage = URLEncoder.encode(message, StandardCharsets.UTF_8);
+        String whatsappUrl = "https://api.whatsapp.com/send?phone=" + phone + "&text=" + encodedMessage;
+
+        return Map.of("url", whatsappUrl);
     }
 
     public List<PropertyResponse> getMyProperties() {
@@ -100,7 +124,8 @@ public class PropertyService {
                 .isVerified(property.isVerified())
                 .landlordId(property.getLandlord().getId())
                 .landlordName(property.getLandlord().getFullName())
-                .landlordPhone(property.getLandlord().getPhoneNumber())
+                // REMOVED: .landlordPhone(property.getLandlord().getPhoneNumber())
+                // We don't expose it here anymore for privacy
                 .build();
     }
 }

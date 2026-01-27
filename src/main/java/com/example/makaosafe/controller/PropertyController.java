@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/properties")
@@ -27,6 +28,12 @@ public class PropertyController {
             @RequestPart("image") MultipartFile imageFile
     ) throws IOException {
         return ResponseEntity.ok(propertyService.addProperty(request, imageFile));
+    }
+
+    // NEW ENDPOINT: Secure WhatsApp Redirect Link
+    @GetMapping("/{id}/contact")
+    public ResponseEntity<Map<String, String>> getContactLink(@PathVariable Long id) {
+        return ResponseEntity.ok(propertyService.getChatLink(id));
     }
 
     @GetMapping("/my-listings")
